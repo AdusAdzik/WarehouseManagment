@@ -1,0 +1,227 @@
+﻿@model IEnumerable<WarehouseManagementSystem.Models.WarehouseInventory>
+
+@{
+    ViewData["Title"] = "Warehouse Inventory";
+    var warehouseEvents = ViewData["WarehouseEvents"] as IEnumerable<WarehouseManagementSystem.Models.WarehouseEvent>;
+    var subcontractors = ViewData["Subcontractors"] as SelectList;
+}
+
+<h1>Warehouse Inventory</h1>
+
+@if (!Model.Any())
+{
+    <p>No items in inventory available for this warehouse.</p>
+}
+else
+{
+    <h2>Current Inventory</h2>
+    <table class="table table-hover table-dark table-responsive table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Product ID</th>
+                <th>Product Number</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var inventory in Model)
+            {
+                <tr>
+                    <td>@inventory.ProductId</td>
+                    <td>@inventory.Product?.Number</td>
+                    <td>@inventory.Product?.Name</td>
+                    <td>@inventory.Quantity</td>
+                    <td>
+                        <button class="btn btn-primary add-to-cart" data-product-id="@inventory.ProductId"
+                                data-quantity="@inventory.Quantity">
+                            Add to Cart
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h2>Warehouse Events</h2>
+@if (warehouseEvents == null || !warehouseEvents.Any())
+{
+    <p>No events found for this warehouse.</p>
+}
+else
+{
+    <table class="table table-hover table-dark table-responsive table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Event Date</th>
+                <th>Event Type</th>
+                <th>Product Number</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Subcontractor</th>
+                <th>User</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var eventItem in warehouseEvents)
+            {
+                <tr class="@(eventItem.EventType == "Receive" ? "table-success" : "table-warning")">
+                    <td>@eventItem.EventDate.ToLocalTime()</td>
+                    <td>@eventItem.EventType</td>
+                    <td>@eventItem.Product?.Number</td>
+                    <td>@eventItem.Product?.Name</td>
+                    <td>@eventItem.Quantity</td>
+                    <td>@eventItem.Subcontractor?.Name</td>
+                    <td>@eventItem.User?.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<h2>Cart</h2>
+<table id="cart-table" class="table table-hover table-dark table-responsive table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Product ID</th>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Cart items dynamically loaded -->
+    </tbody>
+</table>
+
+<h2>Select Subcontractor</h2>
+<select id="subcontractor" class="form-control bg-dark text-white">
+    <option value="">Select Subcontractor</option>
+    @foreach (var subcontractor in subcontractors)
+    {
+        <option value="@subcontractor.Value">@subcontractor.Text</option>
+    }
+</select>
+
+<button id="finalize-issue" class="btn btn-success mt-3">Finalize Issue</button>
+<button id="clear-cart" class="btn btn-danger mt-3">Clear Cart</button>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const warehouseId = @ViewData["WarehouseId"];
+
+        // Add product to cart
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', () => {
+                const productId = button.getAttribute('data-product-id');
+                const maxQuantity = parseFloat(button.getAttribute('data-quantity'));
+
+                Swal.fire({
+                    title: 'Enter Quantity',
+                    input: 'number',
+                    inputAttributes: {
+                        min: 1,
+                        max: maxQuantity,
+                        step: 0.01
+                    },
+                    showCancelButton: true
+                }).then(result => {
+                    if (result.isConfirmed && result.value > 0) {
+                        const quantity = parseFloat(result.value);
+                        if (quantity <= maxQuantity) {
+                            $.post('/WarehouseInventories/AddToIssueCart', {
+                                warehouseId,
+                                productId,
+                                quantity
+                            }, function (response) {
+                                if (response.success) {
+                                    Swal.fire('Added!', 'Product added to cart.', 'success');
+                                    loadCart();
+                                } else {
+                                    Swal.fire('Error', response.message || 'An error occurred.', 'error');
+                                }
+                            });
+                        } else {
+                            Swal.fire('Error', 'Quantity exceeds available stock.', 'error');
+                        }
+                    }
+                });
+            });
+        });
+
+        // Load cart
+        const loadCart = () => {
+            $.get('/WarehouseInventories/CartSummary', function (response) {
+                const cartTable = document.querySelector('#cart-table tbody');
+                cartTable.innerHTML = '';
+                response.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.productId}</td>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>
+                            <button class="btn btn-warning remove-item" data-product-id="${item.productId}">Remove</button>
+                        </td>
+                    `;
+                    cartTable.appendChild(row);
+                });
+
+                // Attach remove event handlers
+                document.querySelectorAll('.remove-item').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const productId = button.getAttribute('data-product-id');
+                        $.post('/WarehouseInventories/RemoveFromCart', { productId }, function (response) {
+                            if (response.success) {
+                                loadCart();
+                            }
+                        });
+                    });
+                });
+            });
+        };
+
+        // Clear cart
+        document.querySelector('#clear-cart').addEventListener('click', () => {
+            $.post('/WarehouseInventories/ClearCart', function (response) {
+                if (response.success) {
+                    loadCart();
+                }
+            });
+        });
+
+        // Finalize issue
+        document.querySelector('#finalize-issue').addEventListener('click', () => {
+            const subcontractorId = document.querySelector('#subcontractor').value;
+            if (!subcontractorId) {
+                Swal.fire('Error', 'Please select a subcontractor.', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '/WarehouseInventories/FinalizeIssue',
+                method: 'POST',
+                data: { subcontractorId },
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire('Success', 'Issue finalized!', 'success').then(() => {
+                            window.location.href = '/Warehouses/Index';
+                        });
+                    } else {
+                        Swal.fire('Error', response.message || 'An error occurred.', 'error');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('FinalizeIssue Error:', status, error);
+                    Swal.fire('Error', 'Could not finalize issue.', 'error');
+                }
+            });
+        });
+
+        // Initial load
+        loadCart();
+    </script>
+}

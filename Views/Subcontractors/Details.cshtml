@@ -1,0 +1,61 @@
+﻿@model WarehouseManagementSystem.Models.Subcontractor
+
+@{
+    ViewData["Title"] = "Subcontractor Details";
+}
+
+<h1>Subcontractor Details</h1>
+
+<div>
+    <h4>Subcontractor</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Name)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Email)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Email)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Phone)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Phone)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Description)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Description)</dd>
+    </dl>
+</div>
+
+<h2>Warehouse Events</h2>
+@if (Model.WarehouseEvents == null || !Model.WarehouseEvents.Any())
+{
+    <p>No events found for this subcontractor.</p>
+}
+else
+{
+    <table class="table table-hover table-dark table-responsive table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Event Date</th>
+                <th>Event Type</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Warehouse</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var eventItem in Model.WarehouseEvents)
+            {
+                <tr class="@(eventItem.EventType == "Issue" ? "table-warning" : "")">
+                    <td>@eventItem.EventDate.ToLocalTime()</td>
+                    <td>@eventItem.EventType</td>
+                    <td>@eventItem.Product?.Name</td>
+                    <td>@eventItem.Quantity</td>
+                    <td>@eventItem.Warehouse?.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a> |
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

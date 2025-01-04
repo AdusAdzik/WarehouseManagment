@@ -1,0 +1,29 @@
+.sidebar {
+    background-color: #242424;
+    color: #ffffff;
+    width: 250px;
+    padding-top: 20px;
+}
+
+    .sidebar .nav-link {
+        color: #ffffff;
+        font-size: 1rem;
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+        .sidebar .nav-link:hover {
+            background-color: #1e1e1e;
+            color: #1e90ff;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+.hover-highlight:hover {
+    background-color: #444;
+}

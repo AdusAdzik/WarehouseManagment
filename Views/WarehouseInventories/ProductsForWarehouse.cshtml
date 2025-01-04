@@ -1,0 +1,147 @@
+﻿@model IEnumerable<WarehouseManagementSystem.Models.Product>
+
+@{
+    ViewData["Title"] = "Products for Warehouse";
+}
+
+<h1>Products for Warehouse</h1>
+
+<table class="table table-hover table-dark table-responsive table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Product Number</th>
+            <th>Product Name</th>
+            <th>Unit</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Number</td>
+                <td>@product.Name</td>
+                <td>@product.Unit</td>
+                <td>
+                    <button class="btn btn-primary add-to-cart" data-product-id="@product.Id">Add to Cart</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h2>Current Cart</h2>
+<table id="cart-table" class="table table-hover table-dark table-responsive table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Product ID</th>
+            <th>Product Number</th>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Cart items will be dynamically loaded via JavaScript -->
+    </tbody>
+</table>
+<button id="finalize-reception" class="btn btn-success">Finalize Reception</button>
+<button id="clear-cart" class="btn btn-danger">Clear Cart</button>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script>
+        // Ensure the warehouse ID is correctly set
+        const warehouseId = @Html.Raw(ViewData["WarehouseId"]);
+
+        // Add product to cart
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', () => {
+                const productId = button.getAttribute('data-product-id');
+
+                Swal.fire({
+                    title: 'Enter Quantity',
+                    input: 'number',
+                    inputAttributes: {
+                        min: 1,
+                        step: 0.01
+                    },
+                    showCancelButton: true
+                }).then(result => {
+                    if (result.isConfirmed && result.value > 0) {
+                        $.post('/WarehouseInventories/AddToCart', {
+                            warehouseId,
+                            productId,
+                            quantity: result.value
+                        }, function (response) {
+                            if (response.success) {
+                                Swal.fire('Added!', 'Product added to cart.', 'success');
+                                loadCart();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // Load cart
+        const loadCart = () => {
+            $.get('/WarehouseInventories/CartSummary', function (response) {
+                const cartTable = document.querySelector('#cart-table tbody');
+                cartTable.innerHTML = '';
+                response.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td>${item.productId}</td>
+                            <td>${item.number}</td>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                            <td>
+                                <button class="btn btn-warning remove-item" data-product-id="${item.productId}">Remove</button>
+                            </td>
+                        </tr>`;
+                    cartTable.innerHTML += row;
+                });
+
+                // Attach remove event handlers
+                document.querySelectorAll('.remove-item').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const productId = button.getAttribute('data-product-id');
+                        $.post('/WarehouseInventories/RemoveFromCart', { productId }, function (response) {
+                            if (response.success) {
+                                loadCart();
+                            }
+                        });
+                    });
+                });
+            });
+        };
+
+        // Clear cart
+        document.querySelector('#clear-cart').addEventListener('click', () => {
+            $.post('/WarehouseInventories/ClearCart', function (response) {
+                if (response.success) {
+                    loadCart();
+                }
+            });
+        });
+
+        // Finalize reception
+        document.querySelector('#finalize-reception').addEventListener('click', () => {
+            $.post('/WarehouseInventories/FinalizeReception', function (response) {
+                if (response.success) {
+                    Swal.fire('Success', 'Reception finalized!', 'success').then(() => {
+                        window.location.href = `/Warehouses/Inventory/${warehouseId}`;
+                    });
+                } else {
+                    Swal.fire('Error', response.message || 'An error occurred.', 'error');
+                }
+            });
+        });
+
+        // Load cart initially
+        loadCart();
+    </script>
+}

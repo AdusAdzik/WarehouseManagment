@@ -1,0 +1,39 @@
+﻿@model WarehouseManagment.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-primary text-light text-center">
+            <div class="card-body">
+                <h5 class="card-title">Warehouses</h5>
+                <p class="card-text display-4">@Model.WarehouseCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-light text-center">
+            <div class="card-body">
+                <h5 class="card-title">Products</h5>
+                <p class="card-text display-4">@Model.ProductCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark text-center">
+            <div class="card-body">
+                <h5 class="card-title">Subcontractors</h5>
+                <p class="card-text display-4">@Model.SubcontractorCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-light text-center">
+            <div class="card-body">
+                <h5 class="card-title">Events</h5>
+                <p class="card-text display-4">@Model.WarehouseEventCount</p>
+            </div>
+        </div>
+    </div>
+</div>

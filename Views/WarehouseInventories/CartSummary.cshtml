@@ -1,0 +1,25 @@
+﻿@model IEnumerable<WarehouseManagementSystem.Models.WarehouseInventory>
+
+@{
+    ViewData["Title"] = "Warehouse Inventory";
+}
+
+<h1>Warehouse Inventory</h1>
+
+<table class="table table-hover table-dark table-responsive table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Product Name</th>
+            <th>Quantity</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var inventory in Model)
+        {
+            <tr>
+                <td>@inventory.Product.Name</td>
+                <td>@inventory.Quantity</td>
+            </tr>
+        }
+    </tbody>
+</table>

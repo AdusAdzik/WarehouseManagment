@@ -1,0 +1,24 @@
+﻿@model IEnumerable<dynamic>
+
+<div>
+    <h4>Logs</h4>
+    <ul>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var log in Model)
+            {
+                <li>
+                    <strong>@log.Action:</strong> @log.Timestamp.ToLocalTime()
+                    <br />
+                    Performed by: @log.User?.Email
+                    <br />
+                    Changes: @log.Changes
+                </li>
+            }
+        }
+        else
+        {
+            <p>No logs available.</p>
+        }
+    </ul>
+</div>

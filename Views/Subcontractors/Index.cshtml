@@ -1,0 +1,39 @@
+﻿@model IEnumerable<WarehouseManagementSystem.Models.Subcontractor>
+
+@{
+    ViewData["Title"] = "Subcontractors";
+}
+
+<h1>Subcontractors</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Subcontractor</a>
+</p>
+
+<table class="table table-hover table-dark table-responsive table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var subcontractor in Model)
+        {
+            <tr>
+                <td>@subcontractor.Name</td>
+                <td>@subcontractor.Email</td>
+                <td>@subcontractor.Phone</td>
+                <td>@subcontractor.Description</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@subcontractor.Id" class="btn btn-info">Details</a>
+                    <a asp-action="Edit" asp-route-id="@subcontractor.Id" class="btn btn-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@subcontractor.Id" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
